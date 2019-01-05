@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using DatingApp.Api.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -12,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Swagger;
 namespace DatingApp.Api
 {
@@ -30,7 +33,21 @@ namespace DatingApp.Api
         {
             services.AddDbContext<DataContext>(x => x.UseSqlite(Configuration.GetConnectionString("DeafultConnection")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-           services.AddCors();
+            services.AddCors();
+            services.AddScoped<IAuthoRepository , AuthRepository>();
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).
+            AddJwtBearer(Options => {
+                Options.TokenValidationParameters = new TokenValidationParameters 
+                {
+                  ValidateIssuerSigningKey = true , 
+                  IssuerSigningKey = new SymmetricSecurityKey(
+                      Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
+                      ValidateIssuer =false ,
+                      ValidateAudience = false , 
+                };
+            });
+
+
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
@@ -53,6 +70,7 @@ namespace DatingApp.Api
 
             // app.UseHttpsRedirection();
             app.UseCors(x =>x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+            app.UseAuthentication();
             app.UseMvc();
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
