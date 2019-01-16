@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using DatingApp.Api.Models;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,13 @@ namespace DatingApp.Api.Data
         {
             _context = context;
         }
+
+        public  async Task<List<User>> GetUsers()
+        {
+            var users = await _context.Users.ToListAsync();
+            return users;
+        }
+
         public async Task<User> Login(string username, string password)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
