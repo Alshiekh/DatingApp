@@ -7,8 +7,9 @@ import {
   HttpErrorResponse,
   HTTP_INTERCEPTORS
 } from '@angular/common/http';
-import { Observable, throwError, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { SERVER_TRANSITION_PROVIDERS } from '@angular/platform-browser/src/browser/server-transition';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -16,10 +17,10 @@ export class ErrorInterceptor implements HttpInterceptor {
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    return next.handle(req).pipe( 
-      catchError((error) => {
+    return next.handle(req).pipe(
+      catchError(error => {
         if (error instanceof HttpErrorResponse) {
-          if (error.status === 401 ) {
+          if (error.status === 401) {
             throwError(error.statusText);
           }
           const applicationError = error.headers.get('Application-Error');
@@ -29,10 +30,10 @@ export class ErrorInterceptor implements HttpInterceptor {
           }
           const serverError = error.error;
           let modalStateErrors = '';
-          if (serverError && typeof serverError === 'object') {
-            for (const key in serverError) {
-              if (serverError[key]) {
-                modalStateErrors +=  serverError[key] + '\n';
+          if (serverError.errors  && typeof serverError.errors === 'object') {
+            for (const key in serverError.errors) {
+              if (serverError.errors[key]) {
+                modalStateErrors += serverError.errors[key] + '\n';
               }
             }
           }
@@ -42,8 +43,8 @@ export class ErrorInterceptor implements HttpInterceptor {
     );
   }
 }
-export const ErrorInterceptorProvider =  {
+export const ErrorInterceptorProvider = {
   provide: HTTP_INTERCEPTORS,
-  useClass: ErrorInterceptor ,
+  useClass: ErrorInterceptor,
   multi: true
 };
