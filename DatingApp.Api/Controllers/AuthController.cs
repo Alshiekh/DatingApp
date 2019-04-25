@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using DatingApp.Api.Data;
 using DatingApp.Api.Dtos;
 using DatingApp.Api.Models;
@@ -18,10 +19,12 @@ namespace DatingApp.Api.Controllers
     {
         private readonly IAuthoRepository _repo;
         private readonly IConfiguration _config;
-        public AuthController(IAuthoRepository repo, IConfiguration config)
+        private readonly IMapper _mapper;
+        public AuthController(IAuthoRepository repo, IConfiguration config , IMapper mapper)
         {
             _config = config;
             _repo = repo;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -75,8 +78,8 @@ namespace DatingApp.Api.Controllers
 
             var tokenhandler = new JwtSecurityTokenHandler();
             var token = tokenhandler.CreateToken(tokenDescription);
-
-            return Ok(new { token = tokenhandler.WriteToken(token) });
+             var user = _mapper.Map<UserForListDto>(userFromRepo);
+            return Ok(new { token = tokenhandler.WriteToken(token) , user });
 
 
         }
